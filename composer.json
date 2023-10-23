@@ -1,0 +1,39 @@
+{
+    "name": "webei/orkestra-wp",
+    "description": "Wordpress proxies to Webei/Orkestra",
+    "type": "project",
+    "license": "MIT",
+    "scripts": {
+        "phpstan": "./vendor/bin/phpstan analyse --memory-limit=2048M src/"
+    },
+    "minimum-stability": "dev",
+    "authors": [
+        {
+            "name": "Luc-cpl",
+            "email": "lucas.carvalhopl@outlook.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "OrkestraWP\\": "src/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../orkestra",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "require": {
+        "webei/orkestra": "*"
+    },
+    "require-dev": {
+        "giacocorsiglia/wordpress-stubs": "^5.1",
+        "szepeviktor/phpstan-wordpress": "dev-master",
+        "phpstan/phpstan": "^1.10",
+        "phpstan/extension-installer": "^1.3"
+    }
+}
