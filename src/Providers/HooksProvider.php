@@ -12,7 +12,7 @@ class HooksProvider implements ProviderInterface
 {
 	public function register(App $app): void
 	{
-		$app->singletone(HooksInterface::class, HooksProxy::class);
+		$app->singleton(HooksInterface::class, HooksProxy::class);
 	}
 
 	public function boot(App $app): void
