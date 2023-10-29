@@ -3,6 +3,7 @@
 namespace OrkestraWP\Providers;
 
 use Orkestra\Interfaces\ProviderInterface;
+use Orkestra\Interfaces\HooksInterface;
 use Orkestra\App;
 
 use OrkestraWP\Proxies\HooksProxy;
