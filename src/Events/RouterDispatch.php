@@ -4,7 +4,7 @@ namespace OrkestraWP\Events;
 
 use Orkestra\App;
 use Orkestra\Interfaces\HooksInterface;
-use Orkestra\Services\RouterService;
+use Orkestra\Services\Router\Router;
 use Psr\Http\Message\ServerRequestInterface;
 
 class RouterDispatch
@@ -16,7 +16,7 @@ class RouterDispatch
 		$app->hookRegister('router.dispatch', $this->handleAdmin(...));
 	}
 
-	protected function handleAdmin(ServerRequestInterface $request, RouterService $router): ServerRequestInterface
+	protected function handleAdmin(ServerRequestInterface $request, Router $router): ServerRequestInterface
 	{
 
 		$this->hooks->register('admin_menu', fn () => $this->registerWPAdmin($router));
@@ -45,7 +45,7 @@ class RouterDispatch
 	 *
 	 * @return void
 	 */
-	protected function registerWPAdmin(RouterService $router): void
+	protected function registerWPAdmin(Router $router): void
 	{
 		$routes = $router->getRoutes();
 
