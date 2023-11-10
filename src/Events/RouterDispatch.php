@@ -16,9 +16,12 @@ class RouterDispatch
 		$app->hookRegister('router.dispatch', $this->handleAdmin(...));
 	}
 
+	/**
+	 * Here we hook into the router dispatch event and change
+	 * current request and routes to respond to WordPress admin pages.
+	 */
 	protected function handleAdmin(ServerRequestInterface $request, Router $router): ServerRequestInterface
 	{
-
 		$this->hooks->register('admin_menu', fn () => $this->registerWPAdmin($router));
 
 		if (is_admin() && isset($_GET['page']) && str_starts_with($_GET['page'], $this->app->slug() . '.')) {
@@ -31,8 +34,7 @@ class RouterDispatch
 				'REQUEST_URI' => $path,
 			]);
 
-			$request = $this->app->get(ServerRequestInterface::class)
-				->withAddedHeader('X-Request-Mode', 'content-only');
+			$request = $this->app->get(ServerRequestInterface::class);
 
 			$_SERVER = $originalServer;
 		}
@@ -42,8 +44,6 @@ class RouterDispatch
 
 	/**
 	 * Search for wp-admin routes and add in WordPress
-	 *
-	 * @return void
 	 */
 	protected function registerWPAdmin(Router $router): void
 	{
@@ -65,6 +65,9 @@ class RouterDispatch
 		}
 	}
 
+	/*
+	 * Add a menu page to WordPress
+	 */
 	protected function addMenuPage($route): void
 	{
 		$path = str_replace('/', '.', $route->getPath());
@@ -73,23 +76,38 @@ class RouterDispatch
 			$route->getConfig('menu_title', $route->getConfig('title')),
 			$route->getConfig('capability'),
 			$this->app->slug() . $path,
-			fn () => null,
+			$this->getRenderedView(...),
 			$route->getConfig('icon', ''),
 			$route->getConfig('position', null)
 		);
 	}
 
+	/*
+	 * Add a submenu page to WordPress
+	 */
 	protected function addSubMenuPage($route): void
 	{
-		$path = str_replace('/', '.', $route->getPath());
+		$path   = str_replace('/', '.', $route->getPath());
+		$parent = str_replace('/', '.', $route->getParentGroup()->getPrefix());
 		add_submenu_page(
-			$route->getParentGroup()->getPrefix(),
+			$this->app->slug() . $parent,
 			$route->getConfig('title'),
 			$route->getConfig('menu_title', $route->getConfig('title')),
 			$route->getConfig('capability'),
 			$this->app->slug() . $path,
-			fn () => null,
+			$this->getRenderedView(...),
 			$route->getConfig('position', null)
 		);
+	}
+
+	/**
+	 * At this point our router should have already dispatched
+	 * the route and a view should be already rendered in the
+	 * view provider. We just need to get the rendered view and
+	 * echo it out.
+	 */
+	protected function getRenderedView(): void
+	{
+		echo $this->app->hookQuery('view.render', '');
 	}
 }
