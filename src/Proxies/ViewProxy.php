@@ -28,8 +28,8 @@ class ViewProxy extends View
 		$headData   = $this->twig->getExtension(OrkestraExtension::class)->getHead();
 		$footerData = $this->twig->getExtension(OrkestraExtension::class)->getFooter();
 
-		$this->enqueueAssets($headData);
-		$this->enqueueAssets($footerData, true);
+		$this->hooks->register('admin_enqueue_scripts', fn () => $this->enqueueAssets($headData));
+		$this->hooks->register('admin_enqueue_scripts', fn () => $this->enqueueAssets($footerData, true));
 
 		$this->app->hookRegister('view.render', fn () => $content);
 
@@ -50,8 +50,8 @@ class ViewProxy extends View
 		$styleIndex  = 0;
 
 		foreach ($data as $tag) {
-			// Skip if not a script or style tag
-			if (!in_array($tag->tag, ['script', 'style'])) {
+			// Skip if not a script or link tag
+			if (!in_array($tag->tag, ['script', 'link'])) {
 				continue;
 			}
 
@@ -63,33 +63,40 @@ class ViewProxy extends View
 				continue;
 			}
 
-			if ($content) {
-				$this->app->hookRegister('wp_enqueue_scripts', fn () => wp_add_inline_script(
+			if (!empty($content) && $script) {
+				wp_add_inline_script(
 					"$slug-$scriptIndex",
 					$content,
 					$scriptIndex === 0 ? 'before' : 'after'
-				));
+				);
+				continue;
+			}
+
+			if (!empty($content)) {
+				wp_add_inline_style(
+					"$slug-$styleIndex",
+					$content,
+				);
 				continue;
 			}
 
 			if ($script) {
-				$this->app->hookRegister('wp_enqueue_scripts', fn () => wp_enqueue_script(
+				wp_enqueue_script(
 					"$slug-$scriptIndex",
 					$src,
 					$scriptIndex === 0 ? [] : "$slug-{($scriptIndex - 1)}",
 					$tag->getAttribute('version'),
 					$footer
-				));
+				);
 				$scriptIndex++;
 				continue;
 			}
-
-			$this->app->hookRegister('wp_enqueue_scripts', fn () => wp_enqueue_style(
+			wp_enqueue_style(
 				"$slug-$styleIndex",
 				$src,
 				$styleIndex === 0 ? [] : "$slug-{($styleIndex - 1)}",
 				$tag->getAttribute('version'),
-			));
+			);
 			$styleIndex++;
 		}
 	}
