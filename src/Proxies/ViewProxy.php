@@ -15,9 +15,8 @@ class ViewProxy extends View
 		protected App            $app,
 		protected HooksInterface $hooks,
 		protected Environment    $twig,
-		OrkestraExtension $extension,
 	) {
-		parent::__construct($twig, $extension);
+		parent::__construct($twig);
 	}
 
 	public function render($name, array $context = []): string
