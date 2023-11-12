@@ -6,14 +6,14 @@ use Orkestra\Interfaces\HooksInterface;
 
 final class HooksProxy implements HooksInterface
 {
-	public function call(string $tag, ...$args): void
+	public function call(string $tag, mixed ...$args): void
 	{
 		do_action($tag, ...$args);
 	}
 
-	public function query(string $tag, ...$args): mixed
+	public function query(string $tag, mixed $value, mixed ...$args): mixed
 	{
-		return apply_filters($tag, ...$args);
+		return apply_filters($tag, $value, ...$args);
 	}
 
 	public function register(string $tag, callable $callback, int $priority = 10): bool
@@ -33,7 +33,7 @@ final class HooksProxy implements HooksInterface
 		return remove_all_filters($tag, $priority) && remove_all_actions($tag, $priority);
 	}
 
-	public function has(string $tag, callable|bool $callable = false): bool
+	public function has(string $tag, callable|false $callable = false): bool
 	{
 		return has_filter($tag, $callable) || has_action($tag, $callable);
 	}
