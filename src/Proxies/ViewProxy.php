@@ -30,7 +30,18 @@ class ViewProxy extends View
 		$this->hooks->register('admin_enqueue_scripts', fn () => $this->enqueueAssets($headData));
 		$this->hooks->register('admin_enqueue_scripts', fn () => $this->enqueueAssets($footerData, true));
 
-		$this->app->hookRegister('view.render', fn () => $content);
+		$this->hooks->register('wp_enqueue_scripts', fn () => $this->enqueueAssets($headData));
+		$this->hooks->register('wp_enqueue_scripts', fn () => $this->enqueueAssets($footerData, true));
+
+		$this->app->hookRegister('view.content', fn () => $content);
+
+		// Full content
+		$htmlBlock   = $this->twig->getExtension(OrkestraExtension::class)->getHtmlBlock();
+		$head        = new HtmlTag('head', [], join('', $headData));
+		$body        = new HtmlTag('body', [], $content . join('', $footerData));
+		$fullContent = '<!DOCTYPE html>' . $htmlBlock->setContent($head . $body);
+
+		$this->app->hookRegister('view.full_content', fn () => $fullContent);
 
 		return '';
 	}
@@ -41,7 +52,7 @@ class ViewProxy extends View
 	 * @param HtmlTag[] $data
 	 * @param boolean   $footer
 	 */
-	protected function enqueueAssets(array $data, bool $footer = false): void
+	private function enqueueAssets(array $data, bool $footer = false): void
 	{
 		$slug = $this->app->slug();
 

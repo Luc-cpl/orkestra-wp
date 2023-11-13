@@ -23,6 +23,7 @@ class RouterDispatch
 	protected function handleAdmin(ServerRequestInterface $request, Router $router): ServerRequestInterface
 	{
 		$this->hooks->register('admin_menu', fn () => $this->registerWPAdmin($router));
+		$this->hooks->register('init', $this->renderFullPage(...));
 
 		if (is_admin() && isset($_GET['page']) && str_starts_with($_GET['page'], $this->app->slug() . '.')) {
 			$path = str_replace($this->app->slug(), '', $_GET['page']);
@@ -100,6 +101,18 @@ class RouterDispatch
 		);
 	}
 
+	protected function renderFullPage(): void
+	{
+		$content = $this->app->hookQuery('view.full_content', '');
+
+		if (empty($content)) {
+			return;
+		}
+
+		echo $content;
+		exit;
+	}
+
 	/**
 	 * At this point our router should have already dispatched
 	 * the route and a view should be already rendered in the
@@ -108,6 +121,6 @@ class RouterDispatch
 	 */
 	protected function getRenderedView(): void
 	{
-		echo $this->app->hookQuery('view.render', '');
+		echo $this->app->hookQuery('view.content', '');
 	}
 }
