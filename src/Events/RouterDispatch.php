@@ -23,7 +23,10 @@ class RouterDispatch
 	protected function handleAdmin(ServerRequestInterface $request, Router $router): ServerRequestInterface
 	{
 		$this->hooks->register('admin_menu', fn () => $this->registerWPAdmin($router));
-		$this->hooks->register('init', $this->renderFullPage(...));
+
+		if (!is_admin()) {
+			$this->hooks->register('init', $this->renderFullPage(...));
+		}
 
 		if (is_admin() && isset($_GET['page']) && str_starts_with($_GET['page'], $this->app->slug() . '.')) {
 			$path = str_replace($this->app->slug(), '', $_GET['page']);
@@ -51,11 +54,19 @@ class RouterDispatch
 		$routes = $router->getRoutes();
 
 		foreach ($routes as $route) {
-			if ($route->getConfig('type') !== 'admin') {
+			// Only add GET routes to WordPress admin menu
+			if ($route->getMethod() !== 'GET') {
 				continue;
 			}
 
 			$group = $route->getParentGroup();
+
+			if (
+				$route->getConfig('type') !== 'admin' &&
+				(!$group || $group->getConfig('type') !== 'admin')
+			) {
+				continue;
+			}
 
 			if (!$group || $group->getPrefix() === $route->getPath()) {
 				$this->addMenuPage($route);
