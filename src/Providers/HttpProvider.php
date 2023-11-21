@@ -3,14 +3,14 @@
 namespace OrkestraWP\Providers;
 
 use Orkestra\App;
-use Orkestra\Providers\RouterProvider as CoreProvider;
+use Orkestra\Providers\HttpProvider as CoreProvider;
 use Orkestra\Interfaces\HooksInterface;
 
 use OrkestraWP\Events\RouterDispatch;
 
 use League\Route\Http\Exception\NotFoundException;
 
-class RouterProvider extends CoreProvider
+class HttpProvider extends CoreProvider
 {
 	public function register(App $app): void
 	{

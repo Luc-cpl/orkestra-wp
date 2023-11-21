@@ -4,7 +4,7 @@ namespace OrkestraWP\Events;
 
 use Orkestra\App;
 use Orkestra\Interfaces\HooksInterface;
-use Orkestra\Services\Router\Router;
+use Orkestra\Services\Http\Router;
 use Psr\Http\Message\ServerRequestInterface;
 
 class RouterDispatch
@@ -52,6 +52,7 @@ class RouterDispatch
 	protected function registerWPAdmin(Router $router): void
 	{
 		$routes = $router->getRoutes();
+		$type   = 'admin';
 
 		foreach ($routes as $route) {
 			// Only add GET routes to WordPress admin menu
@@ -62,8 +63,8 @@ class RouterDispatch
 			$group = $route->getParentGroup();
 
 			if (
-				$route->getConfig('type') !== 'admin' &&
-				(!$group || $group->getConfig('type') !== 'admin')
+				$route->getConfig('type') !== $type &&
+				(!$group || $group->getConfig('type') !== $type)
 			) {
 				continue;
 			}
