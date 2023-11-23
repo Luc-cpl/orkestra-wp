@@ -4,6 +4,7 @@ namespace OrkestraWP\Events;
 
 use Orkestra\App;
 use Orkestra\Interfaces\HooksInterface;
+use Orkestra\Services\Http\Route;
 use Orkestra\Services\Http\Router;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -51,8 +52,8 @@ class RouterDispatch
 	 */
 	protected function registerWPAdmin(Router $router): void
 	{
-		$routes = $router->getRoutes();
 		$type   = 'admin';
+		$routes = $router->getRoutesByDefinitionType($type);
 
 		foreach ($routes as $route) {
 			// Only add GET routes to WordPress admin menu
@@ -61,13 +62,6 @@ class RouterDispatch
 			}
 
 			$group = $route->getParentGroup();
-
-			if (
-				$route->getConfig('type') !== $type &&
-				(!$group || $group->getConfig('type') !== $type)
-			) {
-				continue;
-			}
 
 			if (!$group || $group->getPrefix() === $route->getPath()) {
 				$this->addMenuPage($route);
@@ -81,35 +75,37 @@ class RouterDispatch
 	/*
 	 * Add a menu page to WordPress
 	 */
-	protected function addMenuPage($route): void
+	protected function addMenuPage(Route $route): void
 	{
-		$path = str_replace('/', '.', $route->getPath());
+		$path       = str_replace('/', '.', $route->getPath());
+		$definition = $route->getDefinition();
 		add_menu_page(
-			$route->getConfig('title'),
-			$route->getConfig('menu_title', $route->getConfig('title')),
-			$route->getConfig('capability'),
+			$definition->name(),
+			$definition->name(),
+			$definition->meta('capability', 'manage_options'),
 			$this->app->slug() . $path,
 			$this->getRenderedView(...),
-			$route->getConfig('icon', ''),
-			$route->getConfig('position', null)
+			$definition->meta('icon', ''),
+			$definition->meta('position'),
 		);
 	}
 
 	/*
 	 * Add a submenu page to WordPress
 	 */
-	protected function addSubMenuPage($route): void
+	protected function addSubMenuPage(Route $route): void
 	{
-		$path   = str_replace('/', '.', $route->getPath());
-		$parent = str_replace('/', '.', $route->getParentGroup()->getPrefix());
+		$path       = str_replace('/', '.', $route->getPath());
+		$parent     = str_replace('/', '.', $route->getParentGroup()->getPrefix());
+		$definition = $route->getDefinition();
 		add_submenu_page(
 			$this->app->slug() . $parent,
-			$route->getConfig('title'),
-			$route->getConfig('menu_title', $route->getConfig('title')),
-			$route->getConfig('capability'),
+			$definition->name(),
+			$definition->name(),
+			$definition->meta('capability', 'manage_options'),
 			$this->app->slug() . $path,
 			$this->getRenderedView(...),
-			$route->getConfig('position', null)
+			$definition->meta('position'),
 		);
 	}
 
