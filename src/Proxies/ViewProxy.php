@@ -66,8 +66,11 @@ class ViewProxy extends View
 			}
 
 			$script  = $tag->tag === 'script';
+			/** @var string $src */
 			$src     = $tag->getAttribute('src') ?? $tag->getAttribute('href');
 			$content = $tag->content;
+			/** @var string $version */
+			$version = $tag->getAttribute('version');
 
 			if (empty($src) && empty($content)) {
 				continue;
@@ -94,8 +97,8 @@ class ViewProxy extends View
 				wp_enqueue_script(
 					"$slug-$scriptIndex",
 					$src,
-					$scriptIndex === 0 ? [] : "$slug-{($scriptIndex - 1)}",
-					$tag->getAttribute('version'),
+					$scriptIndex === 0 ? [] : ["$slug-{($scriptIndex - 1)}"],
+					$version,
 					$footer
 				);
 				$scriptIndex++;
@@ -104,8 +107,8 @@ class ViewProxy extends View
 			wp_enqueue_style(
 				"$slug-$styleIndex",
 				$src,
-				$styleIndex === 0 ? [] : "$slug-{($styleIndex - 1)}",
-				$tag->getAttribute('version'),
+				$styleIndex === 0 ? [] : ["$slug-{($styleIndex - 1)}"],
+				$version,
 			);
 			$styleIndex++;
 		}

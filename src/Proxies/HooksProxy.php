@@ -2,6 +2,7 @@
 
 namespace OrkestraWP\Proxies;
 
+use Closure;
 use Orkestra\Interfaces\HooksInterface;
 
 final class HooksProxy implements HooksInterface
@@ -18,7 +19,7 @@ final class HooksProxy implements HooksInterface
 
 	public function register(string $tag, callable $callback, int $priority = 10): bool
 	{
-		$reflection = new \ReflectionFunction($callback);
+		$reflection = new \ReflectionFunction(Closure::fromCallable($callback));
 		$args = $reflection->getNumberOfParameters();
 		return add_filter($tag, $callback, $priority, $args);
 	}
@@ -30,7 +31,9 @@ final class HooksProxy implements HooksInterface
 
 	public function removeAll(string $tag, int|bool $priority = false): bool
 	{
-		return remove_all_filters($tag, $priority) && remove_all_actions($tag, $priority);
+		remove_all_filters($tag, $priority);
+		remove_all_actions($tag, $priority);
+		return true;
 	}
 
 	public function has(string $tag, callable|false $callable = false): bool

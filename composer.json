@@ -9,7 +9,7 @@
         "orkestra"
     ],
     "scripts": {
-        "phpstan": "./vendor/bin/phpstan analyse --memory-limit=2048M src/"
+        "phpstan": "./vendor/bin/phpstan analyse --memory-limit=2048M"
     },
     "minimum-stability": "dev",
     "authors": [

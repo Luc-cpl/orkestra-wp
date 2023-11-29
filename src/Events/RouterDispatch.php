@@ -4,9 +4,10 @@ namespace OrkestraWP\Events;
 
 use Orkestra\App;
 use Orkestra\Interfaces\HooksInterface;
-use Orkestra\Services\Http\Route;
-use Orkestra\Services\Http\Router;
+use Orkestra\Services\Http\Interfaces\RouteInterface;
+use Orkestra\Services\Http\Interfaces\RouterInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Laminas\Diactoros\ServerRequestFactory;
 
 class RouterDispatch
 {
@@ -14,14 +15,14 @@ class RouterDispatch
 		protected App            $app,
 		protected HooksInterface $hooks,
 	) {
-		$app->hookRegister('router.dispatch', $this->handleAdmin(...));
+		$app->hookRegister('http.router.dispatch', $this->handleAdmin(...));
 	}
 
 	/**
 	 * Here we hook into the router dispatch event and change
 	 * current request and routes to respond to WordPress admin pages.
 	 */
-	protected function handleAdmin(ServerRequestInterface $request, Router $router): ServerRequestInterface
+	protected function handleAdmin(ServerRequestInterface $request, RouterInterface $router): ServerRequestInterface
 	{
 		$this->hooks->register('admin_menu', fn () => $this->registerWPAdmin($router));
 
@@ -33,15 +34,11 @@ class RouterDispatch
 			$path = str_replace($this->app->slug(), '', $_GET['page']);
 			$path = str_replace('.', '/', $path);
 
-			$originalServer = $_SERVER;
-
-			$_SERVER = array_merge($_SERVER, [
-				'REQUEST_URI' => $path,
-			]);
-
-			$request = $this->app->get(ServerRequestInterface::class);
-
-			$_SERVER = $originalServer;
+			$request = ServerRequestFactory::fromGlobals(
+				array_merge($_SERVER, [
+					'REQUEST_URI' => $path,
+				])
+			);
 		}
 
 		return $request;
@@ -50,7 +47,7 @@ class RouterDispatch
 	/**
 	 * Search for wp-admin routes and add in WordPress
 	 */
-	protected function registerWPAdmin(Router $router): void
+	protected function registerWPAdmin(RouterInterface $router): void
 	{
 		$type   = 'admin';
 		$routes = $router->getRoutesByDefinitionType($type);
@@ -75,37 +72,47 @@ class RouterDispatch
 	/*
 	 * Add a menu page to WordPress
 	 */
-	protected function addMenuPage(Route $route): void
+	protected function addMenuPage(RouteInterface $route): void
 	{
 		$path       = str_replace('/', '.', $route->getPath());
 		$definition = $route->getDefinition();
+		/** @var string $capability */
+		$capability = $definition->meta('capability', 'manage_options');
+		/** @var string $icon */
+		$icon = $definition->meta('icon', '');
+		/** @var float|int|null $position */
+		$position = $definition->meta('position');
 		add_menu_page(
 			$definition->name(),
 			$definition->name(),
-			$definition->meta('capability', 'manage_options'),
+			$capability,
 			$this->app->slug() . $path,
 			$this->getRenderedView(...),
-			$definition->meta('icon', ''),
-			$definition->meta('position'),
+			$icon,
+			$position,
 		);
 	}
 
 	/*
 	 * Add a submenu page to WordPress
 	 */
-	protected function addSubMenuPage(Route $route): void
+	protected function addSubMenuPage(RouteInterface $route): void
 	{
 		$path       = str_replace('/', '.', $route->getPath());
-		$parent     = str_replace('/', '.', $route->getParentGroup()->getPrefix());
+		$parent     = str_replace('/', '.', $route->getParentGroup()?->getPrefix() ?? '');
 		$definition = $route->getDefinition();
+		/** @var string $capability */
+		$capability = $definition->meta('capability', 'manage_options');
+		/** @var float|int|null $position */
+		$position = $definition->meta('position');
 		add_submenu_page(
 			$this->app->slug() . $parent,
 			$definition->name(),
 			$definition->name(),
-			$definition->meta('capability', 'manage_options'),
+			$capability,
 			$this->app->slug() . $path,
 			$this->getRenderedView(...),
-			$definition->meta('position'),
+			$position,
 		);
 	}
 

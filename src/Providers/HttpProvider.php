@@ -28,7 +28,7 @@ class HttpProvider extends CoreProvider
 		$app->get(RouterDispatch::class);
 		$app->runIfAvailable(HooksInterface::class, function (HooksInterface $hooks) use ($app) {
 			// Run our router after all plugins are loaded
-			$hooks->register('plugins_loaded', function () use ($app) {
+			$hooks->register('init', function () use ($app) {
 				/**
 				 * In WordPress environment, we need to bypass
 				 * the router on not found routes as this is
@@ -36,7 +36,7 @@ class HttpProvider extends CoreProvider
 				 */
 				try {
 					parent::boot($app);
-				} catch (NotFoundException $th) {
+				} catch (NotFoundException) {
 				}
 			});
 		});

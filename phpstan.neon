@@ -1,0 +1,9 @@
+parameters:
+	level: 9
+	paths:
+		- src
+		- ../orkestra/src
+		- ../orkestra/vendor
+	excludePaths:
+		analyse:
+			- ../orkestra/vendor
