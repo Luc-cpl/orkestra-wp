@@ -9,7 +9,7 @@ use Orkestra\Services\Http\Interfaces\RouterInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Laminas\Diactoros\ServerRequestFactory;
 
-class RouterDispatch
+class AdminDispatch
 {
 	public function __construct(
 		protected App            $app,

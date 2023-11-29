@@ -6,16 +6,16 @@ use Orkestra\App;
 use Orkestra\Providers\HttpProvider as CoreProvider;
 use Orkestra\Interfaces\HooksInterface;
 
-use OrkestraWP\Events\RouterDispatch;
+use OrkestraWP\Events\AdminDispatch;
 
 use League\Route\Http\Exception\NotFoundException;
+use OrkestraWP\Events\ApiDispatch;
 
 class HttpProvider extends CoreProvider
 {
 	public function register(App $app): void
 	{
 		parent::register($app);
-		$app->singleton(RouterDispatch::class, RouterDispatch::class);
 	}
 	/**
 	 * Here we can use the container to resolve and start services.
@@ -25,7 +25,10 @@ class HttpProvider extends CoreProvider
 	 */
 	public function boot(App $app): void
 	{
-		$app->get(RouterDispatch::class);
+		// Start to listen WP hooks
+		$app->get(AdminDispatch::class);
+		$app->get(ApiDispatch::class);
+
 		$app->runIfAvailable(HooksInterface::class, function (HooksInterface $hooks) use ($app) {
 			// Run our router after all plugins are loaded
 			$hooks->register('init', function () use ($app) {
