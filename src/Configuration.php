@@ -6,7 +6,7 @@ use Orkestra\Configuration as CoreProxy;
 
 class Configuration extends CoreProxy
 {
-	public function get(string $key): mixed
+	public function get(string $key, mixed $default = null): mixed
 	{
 		/** @var string */
 		$root = $this->get('root');
