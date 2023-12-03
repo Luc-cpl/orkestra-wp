@@ -4,6 +4,7 @@ namespace OrkestraWP\Proxies;
 
 use Orkestra\App;
 use Orkestra\Interfaces\HooksInterface;
+use Orkestra\Services\Http\Interfaces\RouteInterface;
 use Orkestra\Services\View\HtmlTag;
 use Orkestra\Services\View\Twig\OrkestraExtension;
 use Orkestra\Services\View\View;
@@ -15,14 +16,32 @@ class ViewProxy extends View
 		protected App            $app,
 		protected HooksInterface $hooks,
 		protected Environment    $twig,
+		protected RouteInterface $route,
 	) {
 		parent::__construct($twig);
 	}
 
 	public function render($name, array $context = []): string
 	{
-		$name    = rtrim($name, '.twig') . '.twig';
+		$route = $this->route;
+		$group = $route->getParentGroup();
 
+		/** @var string[] */
+		$wpTypes = $this->app->hookQuery('view.wp_types', [
+			'api',
+			'admin',
+		]);
+
+		$type = $route->getDefinition()->type();
+		$type = empty($type) && $group ? $group->getDefinition()->type() : $type;
+
+		if (!in_array($type, $wpTypes, true)) {
+			// As this is not a WP call, we render the template as normal then exit.
+			$this->app->hookRegister('http.router.response.after', fn () => exit);
+			return parent::render($name, $context);
+		}
+
+		$name       = rtrim($name, '.twig') . '.twig';
 		$content    = $this->twig->render($name, $context);
 		$headData   = $this->twig->getExtension(OrkestraExtension::class)->getHead();
 		$footerData = $this->twig->getExtension(OrkestraExtension::class)->getFooter();
