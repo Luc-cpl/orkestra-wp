@@ -17,6 +17,7 @@ class HttpProvider extends CoreProvider
 	public function register(App $app): void
 	{
 		parent::register($app);
+		$app->bind('middlewares.auth', AuthMiddleware::class);
 	}
 	/**
 	 * Here we can use the container to resolve and start services.
@@ -29,10 +30,6 @@ class HttpProvider extends CoreProvider
 		// Start to listen WP hooks
 		$app->get(AdminDispatch::class);
 		$app->get(ApiDispatch::class);
-
-		$app->hookRegister('http.middlewares', fn ($middlewares) => array_merge($middlewares, [
-			'auth' => AuthMiddleware::class,
-		]));
 
 		$app->runIfAvailable(HooksInterface::class, function (HooksInterface $hooks) use ($app) {
 			// Run our router after all plugins are loaded
