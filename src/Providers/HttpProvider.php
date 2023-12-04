@@ -10,6 +10,7 @@ use OrkestraWP\Events\AdminDispatch;
 
 use League\Route\Http\Exception\NotFoundException;
 use OrkestraWP\Events\ApiDispatch;
+use OrkestraWP\Middlewares\AuthMiddleware;
 
 class HttpProvider extends CoreProvider
 {
@@ -28,6 +29,10 @@ class HttpProvider extends CoreProvider
 		// Start to listen WP hooks
 		$app->get(AdminDispatch::class);
 		$app->get(ApiDispatch::class);
+
+		$app->hookRegister('http.middlewares', fn ($middlewares) => array_merge($middlewares, [
+			'auth' => AuthMiddleware::class,
+		]));
 
 		$app->runIfAvailable(HooksInterface::class, function (HooksInterface $hooks) use ($app) {
 			// Run our router after all plugins are loaded
