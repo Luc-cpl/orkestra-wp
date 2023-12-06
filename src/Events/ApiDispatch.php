@@ -5,6 +5,7 @@ namespace OrkestraWP\Events;
 use Orkestra\App;
 use Orkestra\Interfaces\HooksInterface;
 use Orkestra\Services\Http\Interfaces\RouterInterface;
+use Orkestra\Services\Http\Entities\ParamDefinition;
 
 use Laminas\Diactoros\ServerRequestFactory;
 use WP_REST_Request;
@@ -99,9 +100,14 @@ class ApiDispatch
 		$path = str_replace('{', '(?P<', $path);
 		$path = str_replace('}', '>[^/]+)', $path);
 		$path = preg_replace('/:.*/', '>[^/]+)', $path);
+		/** @var string */
 		return $path;
 	}
 
+	/**
+	 * @param ParamDefinition[] $params
+	 * @return mixed[]
+	 */
 	protected function formatArgs(array $params): array
 	{
 		$formatted = [];

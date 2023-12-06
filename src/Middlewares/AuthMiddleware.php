@@ -19,7 +19,6 @@ use Psr\Http\Server\RequestHandlerInterface;
 class AuthMiddleware implements MiddlewareInterface
 {
 	/**
-	 * @param Auth $auth
 	 * @param string|string[] $role
 	 */
 	public function __construct(

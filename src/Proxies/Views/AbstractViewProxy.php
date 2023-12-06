@@ -1,47 +1,41 @@
 <?php
 
-namespace OrkestraWP\Proxies;
+namespace OrkestraWP\Proxies\Views;
 
 use Orkestra\App;
 use Orkestra\Interfaces\HooksInterface;
-use Orkestra\Services\Http\Interfaces\RouteInterface;
+use Orkestra\Interfaces\ViewInterface;
 use Orkestra\Services\View\HtmlTag;
 use Orkestra\Services\View\Twig\OrkestraExtension;
 use Orkestra\Services\View\View;
 use Twig\Environment;
 
-class ViewProxy extends View
+abstract class AbstractViewProxy implements ViewInterface
 {
+	protected View $defaultView;
+
 	public function __construct(
 		protected App            $app,
 		protected HooksInterface $hooks,
 		protected Environment    $twig,
-		protected RouteInterface $route,
 	) {
-		parent::__construct($twig);
+		$this->defaultView = $app->get(View::class, ['twig' => $twig]);
 	}
 
-	public function render($name, array $context = []): string
+	abstract public function render(string $name, array $context = []): string;
+
+	/**
+	 * @param mixed[] $context
+	 */
+	protected function wpRender(string $type, string $name, array $context = []): string
 	{
-		$route = $this->route;
-		$group = $route->getParentGroup();
-
-		/** @var string[] */
-		$wpTypes = $this->app->hookQuery('view.wp_types', [
-			'api',
-			'admin',
-		]);
-
-		$type = $route->getDefinition()->type();
-		$type = empty($type) && $group ? $group->getDefinition()->type() : $type;
-
-		if (!in_array($type, $wpTypes, true)) {
+		if (!$this->isWPType($type)) {
 			// As this is not a WP call, we render the template as normal then exit.
 			$this->app->hookRegister('http.router.response.after', fn () => exit);
-			return parent::render($name, $context);
+			return $this->defaultView->render($name, $context);
 		}
 
-		$name       = rtrim($name, '.twig') . '.twig';
+		$name       = explode('.', $name, 1)[0] . '.twig';
 		$content    = $this->twig->render($name, $context);
 		$headData   = $this->twig->getExtension(OrkestraExtension::class)->getHead();
 		$footerData = $this->twig->getExtension(OrkestraExtension::class)->getFooter();
@@ -52,17 +46,19 @@ class ViewProxy extends View
 		$this->hooks->register('wp_enqueue_scripts', fn () => $this->enqueueAssets($headData));
 		$this->hooks->register('wp_enqueue_scripts', fn () => $this->enqueueAssets($footerData, true));
 
-		$this->app->hookRegister('view.content', fn () => $content);
+		return $content;
+	}
 
-		// Full content
-		$htmlBlock   = $this->twig->getExtension(OrkestraExtension::class)->getHtmlBlock();
-		$head        = new HtmlTag('head', [], join('', $headData));
-		$body        = new HtmlTag('body', [], $content . join('', $footerData));
-		$fullContent = '<!DOCTYPE html>' . $htmlBlock->setContent($head . $body);
+	protected function isWPType(string $type): bool
+	{
+		/** @var string[] */
+		$wpTypes = $this->app->hookQuery('view.wp_types', [
+			'api',
+			'admin',
+			'block',
+		]);
 
-		$this->app->hookRegister('view.full_content', fn () => $fullContent);
-
-		return '';
+		return in_array($type, $wpTypes, true);
 	}
 
 	/**

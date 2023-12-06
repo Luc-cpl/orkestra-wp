@@ -26,10 +26,6 @@ class AdminDispatch
 	{
 		$this->hooks->register('admin_menu', fn () => $this->registerWPAdmin($router));
 
-		if (!is_admin()) {
-			$this->hooks->register('init', $this->renderFullPage(...));
-		}
-
 		if (is_admin() && isset($_GET['page']) && str_starts_with($_GET['page'], $this->app->slug() . '.')) {
 			$path = str_replace($this->app->slug(), '', $_GET['page']);
 			$path = str_replace('.', '/', $path);
@@ -114,18 +110,6 @@ class AdminDispatch
 			$this->getRenderedView(...),
 			$position,
 		);
-	}
-
-	protected function renderFullPage(): void
-	{
-		$content = $this->app->hookQuery('view.full_content', '');
-
-		if (empty($content)) {
-			return;
-		}
-
-		echo $content;
-		exit;
 	}
 
 	/**

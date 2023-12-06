@@ -6,7 +6,7 @@ use Orkestra\App;
 use Orkestra\Providers\ViewProvider as CoreProvider;
 use Orkestra\Interfaces\ViewInterface;
 
-use OrkestraWP\Proxies\ViewProxy as View;
+use OrkestraWP\Proxies\Views\HttpViewProxy as View;
 
 class ViewProvider extends CoreProvider
 {
