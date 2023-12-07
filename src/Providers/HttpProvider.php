@@ -4,11 +4,7 @@ namespace OrkestraWP\Providers;
 
 use Orkestra\App;
 use Orkestra\Providers\HttpProvider as CoreProvider;
-use Orkestra\Interfaces\HooksInterface;
-
 use OrkestraWP\Events\AdminDispatch;
-
-use League\Route\Http\Exception\NotFoundException;
 use OrkestraWP\Events\ApiDispatch;
 use OrkestraWP\Middlewares\AuthMiddleware;
 
@@ -31,19 +27,6 @@ class HttpProvider extends CoreProvider
 		$app->get(AdminDispatch::class);
 		$app->get(ApiDispatch::class);
 
-		$app->runIfAvailable(HooksInterface::class, function (HooksInterface $hooks) use ($app) {
-			// Run our router after all plugins are loaded
-			$hooks->register('init', function () use ($app) {
-				/**
-				 * In WordPress environment, we need to bypass
-				 * the router on not found routes as this is
-				 * handled by WordPress itself.
-				 */
-				try {
-					parent::boot($app);
-				} catch (NotFoundException) {
-				}
-			});
-		});
+		parent::boot($app);
 	}
 }
