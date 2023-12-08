@@ -14,6 +14,11 @@ abstract class AbstractViewProxy implements ViewInterface
 {
 	protected View $defaultView;
 
+	/**
+	 * @var array<string, mixed[]|bool|int|float|string>
+	 */
+	private array $extraAttributes = [];
+
 	public function __construct(
 		protected App            $app,
 		protected HooksInterface $hooks,
@@ -45,6 +50,8 @@ abstract class AbstractViewProxy implements ViewInterface
 
 		$this->hooks->register('wp_enqueue_scripts', fn () => $this->enqueueAssets($headData));
 		$this->hooks->register('wp_enqueue_scripts', fn () => $this->enqueueAssets($footerData, true));
+
+		$this->hooks->register('script_loader_tag', $this->setExtraAttributes(...));
 
 		return $content;
 	}
@@ -81,11 +88,13 @@ abstract class AbstractViewProxy implements ViewInterface
 			}
 
 			$script  = $tag->tag === 'script';
-			/** @var string $src */
+			/** @var string */
 			$src     = $tag->getAttribute('src') ?? $tag->getAttribute('href');
 			$content = $tag->content;
-			/** @var string $version */
+			/** @var string */
 			$version = $tag->getAttribute('version');
+			/** @var string[] */
+			$dependencies = $tag->getAttribute('dependencies') ?? [];
 
 			if (empty($src) && empty($content)) {
 				continue;
@@ -109,23 +118,65 @@ abstract class AbstractViewProxy implements ViewInterface
 			}
 
 			if ($script) {
+				$handle = "$slug-$scriptIndex";
 				wp_enqueue_script(
-					"$slug-$scriptIndex",
+					$handle,
 					$src,
-					$scriptIndex === 0 ? [] : ["$slug-{($scriptIndex - 1)}"],
+					$scriptIndex === 0 ? $dependencies : [...$dependencies, "$slug-{($scriptIndex - 1)}"],
 					$version,
 					$footer
 				);
+
+				$attributes = $tag->attributes;
+
+				unset(
+					$attributes['src'],
+					$attributes['href'],
+					$attributes['version'],
+					$attributes['dependencies']
+				);
+
+				if (!empty($attributes)) {
+					$this->extraAttributes[$handle] = $attributes;
+				}
+
 				$scriptIndex++;
 				continue;
 			}
 			wp_enqueue_style(
 				"$slug-$styleIndex",
 				$src,
-				$styleIndex === 0 ? [] : ["$slug-{($styleIndex - 1)}"],
+				$styleIndex === 0 ? $dependencies : [...$dependencies, "$slug-{($styleIndex - 1)}"],
 				$version,
 			);
 			$styleIndex++;
 		}
+	}
+
+	private function setExtraAttributes(string $tag, string $handle): string
+	{
+		if (!isset($this->extraAttributes[$handle])) {
+			return $tag;
+		}
+
+		$attributes = $this->extraAttributes[$handle];
+		$newAttributes = '';
+
+		foreach ($attributes as $key => $value) {
+			if (str_contains($tag, " $key=") || str_contains($tag, " $key ")) {
+				$tag = preg_replace("/ $key=\"[^\"]*\"/", '', $tag);
+				$tag = preg_replace("/ $key /", '', $tag);
+			}
+			if (is_array($value)) {
+				$value = json_encode($value);
+			}
+			$newAttributes .= match ($value) {
+				false => '',
+				true  => " $key",
+				default => sprintf(' %s="%s"', $key, $value),
+			};
+		}
+
+		return str_replace('>', $newAttributes . '>', $tag);
 	}
 }
