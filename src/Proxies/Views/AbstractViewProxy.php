@@ -3,8 +3,8 @@
 namespace OrkestraWP\Proxies\Views;
 
 use Orkestra\App;
-use Orkestra\Interfaces\HooksInterface;
-use Orkestra\Interfaces\ViewInterface;
+use Orkestra\Services\Hooks\Interfaces\HooksInterface;
+use Orkestra\Services\View\Interfaces\ViewInterface;
 use Orkestra\Services\Http\Interfaces\RouteAwareInterface;
 use Orkestra\Services\Http\Interfaces\RouteInterface;
 use Orkestra\Services\View\HtmlTag;

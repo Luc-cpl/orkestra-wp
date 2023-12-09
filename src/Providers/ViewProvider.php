@@ -4,7 +4,7 @@ namespace OrkestraWP\Providers;
 
 use Orkestra\App;
 use Orkestra\Providers\ViewProvider as CoreProvider;
-use Orkestra\Interfaces\ViewInterface;
+use Orkestra\Services\View\Interfaces\ViewInterface;
 
 use OrkestraWP\Proxies\Views\HttpViewProxy as View;
 

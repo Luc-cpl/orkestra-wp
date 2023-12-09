@@ -3,7 +3,7 @@
 namespace OrkestraWP\Events;
 
 use Orkestra\App;
-use Orkestra\Interfaces\HooksInterface;
+use Orkestra\Services\Hooks\Interfaces\HooksInterface;
 use Orkestra\Services\Http\Interfaces\RouterInterface;
 use Orkestra\Services\Http\Entities\ParamDefinition;
 

@@ -5,7 +5,7 @@ namespace OrkestraWP\Handlers;
 use League\Route\Http\Exception\NotFoundException;
 use Orkestra\Handlers\HttpHandler as CoreHttpHandler;
 use Orkestra\Interfaces\HandlerInterface;
-use Orkestra\Interfaces\HooksInterface;
+use Orkestra\Services\Hooks\Interfaces\HooksInterface;
 
 class HttpHandler extends CoreHttpHandler implements HandlerInterface
 {

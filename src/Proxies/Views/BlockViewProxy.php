@@ -3,7 +3,7 @@
 namespace OrkestraWP\Proxies\Views;
 
 use Orkestra\App;
-use Orkestra\Interfaces\HooksInterface;
+use Orkestra\Services\Hooks\Interfaces\HooksInterface;
 use Twig\Environment;
 
 class BlockViewProxy extends AbstractViewProxy

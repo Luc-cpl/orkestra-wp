@@ -3,7 +3,7 @@
 namespace OrkestraWP\Proxies;
 
 use Closure;
-use Orkestra\Interfaces\HooksInterface;
+use Orkestra\Services\Hooks\Interfaces\HooksInterface;
 
 final class HooksProxy implements HooksInterface
 {
