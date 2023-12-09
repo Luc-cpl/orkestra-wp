@@ -15,7 +15,7 @@ abstract class AbstractViewProxy implements ViewInterface
 	protected View $defaultView;
 
 	/**
-	 * @var array<string, mixed[]|bool|int|float|string>
+	 * @var array<string, array<string, bool|string|int|float|mixed[]>>
 	 */
 	private array $extraAttributes = [];
 
@@ -164,7 +164,9 @@ abstract class AbstractViewProxy implements ViewInterface
 
 		foreach ($attributes as $key => $value) {
 			if (str_contains($tag, " $key=") || str_contains($tag, " $key ")) {
+				/** @var string $tag */
 				$tag = preg_replace("/ $key=\"[^\"]*\"/", '', $tag);
+				/** @var string $tag */
 				$tag = preg_replace("/ $key /", '', $tag);
 			}
 			if (is_array($value)) {
