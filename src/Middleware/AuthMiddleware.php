@@ -1,6 +1,6 @@
 <?php
 
-namespace OrkestraWP\Middlewares;
+namespace OrkestraWP\Middleware;
 
 use OrkestraWP\Repositories\Auth;
 use League\Route\Http\Exception\ForbiddenException;

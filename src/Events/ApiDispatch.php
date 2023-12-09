@@ -85,7 +85,7 @@ class ApiDispatch
 
 					return json_decode($response->getBody());
 				},
-				/** Allow all request so we can handle on our middlewares */
+				/** Allow all request so we can handle on our middleware */
 				'permission_callback' => fn () => true,
 			];
 		}

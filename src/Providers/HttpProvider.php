@@ -6,14 +6,14 @@ use Orkestra\App;
 use Orkestra\Providers\HttpProvider as CoreProvider;
 use OrkestraWP\Events\AdminDispatch;
 use OrkestraWP\Events\ApiDispatch;
-use OrkestraWP\Middlewares\AuthMiddleware;
+use OrkestraWP\Middleware\AuthMiddleware;
 
 class HttpProvider extends CoreProvider
 {
 	public function register(App $app): void
 	{
 		parent::register($app);
-		$app->bind('middlewares.auth', AuthMiddleware::class);
+		$app->bind('middleware.auth', AuthMiddleware::class);
 	}
 	/**
 	 * Here we can use the container to resolve and start services.
