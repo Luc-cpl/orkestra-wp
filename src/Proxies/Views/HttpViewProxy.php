@@ -19,6 +19,11 @@ class HttpViewProxy extends AbstractViewProxy
 	public function render($name, array $context = []): string
 	{
 		$route = $this->route;
+
+		if (!$route) {
+			return $this->defaultView->render($name, $context);
+		}
+
 		$group = $route->getParentGroup();
 
 		$type = $route->getDefinition()->type();
