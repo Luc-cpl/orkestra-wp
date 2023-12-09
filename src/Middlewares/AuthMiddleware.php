@@ -2,7 +2,7 @@
 
 namespace OrkestraWP\Middlewares;
 
-use App\Repositories\Auth;
+use OrkestraWP\Repositories\Auth;
 use League\Route\Http\Exception\ForbiddenException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
