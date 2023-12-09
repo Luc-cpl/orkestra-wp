@@ -5,14 +5,17 @@ namespace OrkestraWP\Proxies\Views;
 use Orkestra\App;
 use Orkestra\Interfaces\HooksInterface;
 use Orkestra\Interfaces\ViewInterface;
+use Orkestra\Services\Http\Interfaces\RouteAwareInterface;
+use Orkestra\Services\Http\Interfaces\RouteInterface;
 use Orkestra\Services\View\HtmlTag;
 use Orkestra\Services\View\Twig\OrkestraExtension;
 use Orkestra\Services\View\View;
 use Twig\Environment;
 
-abstract class AbstractViewProxy implements ViewInterface
+abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 {
 	protected View $defaultView;
+	protected ?RouteInterface $route = null;
 
 	/**
 	 * @var array<string, array<string, bool|string|int|float|mixed[]>>
@@ -25,6 +28,12 @@ abstract class AbstractViewProxy implements ViewInterface
 		protected Environment    $twig,
 	) {
 		$this->defaultView = $app->get(View::class, ['twig' => $twig]);
+	}
+
+	public function setRoute(RouteInterface $route): self
+	{
+		$this->route = $route;
+		return $this;
 	}
 
 	abstract public function render(string $name, array $context = []): string;

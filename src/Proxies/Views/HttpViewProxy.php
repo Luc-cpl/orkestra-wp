@@ -4,7 +4,6 @@ namespace OrkestraWP\Proxies\Views;
 
 use Orkestra\App;
 use Orkestra\Interfaces\HooksInterface;
-use Orkestra\Services\Http\Interfaces\RouteInterface;
 use Twig\Environment;
 
 class HttpViewProxy extends AbstractViewProxy
@@ -13,7 +12,6 @@ class HttpViewProxy extends AbstractViewProxy
 		protected App            $app,
 		protected HooksInterface $hooks,
 		protected Environment    $twig,
-		protected RouteInterface $route,
 	) {
 		parent::__construct($app, $hooks, $twig);
 	}
