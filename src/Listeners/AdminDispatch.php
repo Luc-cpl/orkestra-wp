@@ -1,28 +1,36 @@
 <?php
 
-namespace OrkestraWP\Events;
+namespace OrkestraWP\Listeners;
 
 use Orkestra\App;
+use Orkestra\Services\Hooks\Interfaces\ListenerInterface;
 use Orkestra\Services\Hooks\Interfaces\HooksInterface;
 use Orkestra\Services\Http\Interfaces\RouteInterface;
 use Orkestra\Services\Http\Interfaces\RouterInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Laminas\Diactoros\ServerRequestFactory;
 
-class AdminDispatch
+class AdminDispatch implements ListenerInterface
 {
 	public function __construct(
 		protected App            $app,
 		protected HooksInterface $hooks,
 	) {
-		$app->hookRegister('http.router.dispatch', $this->handleAdmin(...));
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function hook(): string
+	{
+		return '{app}.http.router.dispatch';
 	}
 
 	/**
 	 * Here we hook into the router dispatch event and change
 	 * current request and routes to respond to WordPress admin pages.
 	 */
-	protected function handleAdmin(ServerRequestInterface $request, RouterInterface $router): ServerRequestInterface
+	public function handle(ServerRequestInterface $request, RouterInterface $router): ServerRequestInterface
 	{
 		$this->hooks->register('admin_menu', fn () => $this->registerWPAdmin($router));
 

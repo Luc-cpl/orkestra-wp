@@ -2,20 +2,17 @@
 
 namespace OrkestraWP\Providers;
 
-use Orkestra\Interfaces\ProviderInterface;
-use Orkestra\Services\Hooks\Interfaces\HooksInterface;
 use Orkestra\App;
+use Orkestra\Providers\HooksProvider as CoreHooksProvider;
+use Orkestra\Services\Hooks\Interfaces\HooksInterface;
 
 use OrkestraWP\Proxies\HooksProxy;
 
-class HooksProvider implements ProviderInterface
+class HooksProvider extends CoreHooksProvider
 {
 	public function register(App $app): void
 	{
+		parent::register($app);
 		$app->singleton(HooksInterface::class, HooksProxy::class);
-	}
-
-	public function boot(App $app): void
-	{
 	}
 }

@@ -1,39 +1,36 @@
 <?php
 
-namespace OrkestraWP\Events;
+namespace OrkestraWP\Listeners;
 
 use Orkestra\App;
-use Orkestra\Services\Hooks\Interfaces\HooksInterface;
 use Orkestra\Services\Http\Interfaces\RouterInterface;
 use Orkestra\Services\Http\Entities\ParamDefinition;
 
 use Laminas\Diactoros\ServerRequestFactory;
+use Orkestra\Services\Hooks\Interfaces\ListenerInterface;
 use WP_REST_Request;
 
-class ApiDispatch
+class ApiDispatch implements ListenerInterface
 {
 	public function __construct(
-		protected HooksInterface $hooks,
-		protected App			 $app,
+		protected App			  $app,
+		protected RouterInterface $router,
 	) {
-		$app->hookRegister('http.router.config', $this->handleApi(...));
+	}
+
+	public function hook(): string
+	{
+		return 'rest_api_init';
 	}
 
 	/**
 	 * Here we hook into the router boot event and register
 	 * our api routes into WordPress.
 	 */
-	protected function handleApi(RouterInterface $router): void
-	{
-		$this->hooks->register('rest_api_init', fn () => $this->registerEndpoints($router));
-	}
-
-	/**
-	 * Search for api routes and add in WordPress
-	 */
-	protected function registerEndpoints(RouterInterface $router): void
+	public function handle(): void
 	{
 		$type   = 'api';
+		$router = $this->router;
 		$routes = $router->getRoutesByDefinitionType($type);
 
 		$wpRoutes = [];
