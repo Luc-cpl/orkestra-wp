@@ -128,10 +128,11 @@ abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 
 			if ($script) {
 				$handle = "$slug-$scriptIndex";
+				$dependency = $slug . '-' . ($scriptIndex - 1);
 				wp_enqueue_script(
 					$handle,
 					$src,
-					$scriptIndex === 0 ? $dependencies : [...$dependencies, "$slug-{($scriptIndex - 1)}"],
+					$scriptIndex === 0 ? $dependencies : [...$dependencies, $dependency],
 					$version,
 					$footer
 				);
@@ -152,10 +153,11 @@ abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 				$scriptIndex++;
 				continue;
 			}
+			$dependency = $slug . '-' . ($styleIndex - 1);
 			wp_enqueue_style(
 				"$slug-$styleIndex",
 				$src,
-				$styleIndex === 0 ? $dependencies : [...$dependencies, "$slug-{($styleIndex - 1)}"],
+				$styleIndex === 0 ? $dependencies : [...$dependencies, $dependency],
 				$version,
 			);
 			$styleIndex++;
