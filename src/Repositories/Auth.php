@@ -2,8 +2,17 @@
 
 namespace OrkestraWP\Repositories;
 
+use Orkestra\App;
+use DI\Attribute\Inject;
+
 class Auth
 {
+	/**
+	 * Inject to allow extending the Auth repository
+	 */
+	#[Inject()]
+	protected App $app;
+
 	public readonly ?\WP_User $user;
 	public readonly bool $authenticated;
 
@@ -14,15 +23,20 @@ class Auth
 			$this->authenticated = $user->exists();
 			return;
 		}
+		if (!function_exists('wp_get_current_user')) {
+			$this->user = null;
+			$this->authenticated = false;
+			return;
+		}
 		$user = wp_get_current_user();
 		$this->user = $user->exists() ? $user : null;
 		$this->authenticated = $user->exists();
 	}
 
-	public function authenticate(string $username, string $password): self
+	public function authenticate(string $username, string $password, bool $login = true): self
 	{
 		if (empty($username) || empty($password)) {
-			return new self();
+			return $this->app->get(static::class);
 		}
 
 		$isEmail = filter_var($username, FILTER_VALIDATE_EMAIL);
@@ -32,18 +46,22 @@ class Auth
 			: get_user_by('login', $username);
 
 		if (!$user) {
-			return new self();
+			return $this->app->get(static::class);
 		}
 
 		$authenticated = wp_check_password($password, $user->user_pass, $user->ID);
 
+		if (!$authenticated) {
+			return $this->app->get(static::class);
+		}
+
 		// Login through WordPress
-		if ($authenticated) {
+		if ($login) {
 			wp_set_current_user($user->ID, $user->user_login);
 			wp_set_auth_cookie($user->ID);
 			do_action('wp_login', $user->user_login, $user);
 		}
 
-		return new self($authenticated ? $user : null);
+		return $this->app->get(static::class, ['user' => $user]);
 	}
 }
