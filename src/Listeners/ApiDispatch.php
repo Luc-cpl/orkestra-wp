@@ -8,6 +8,7 @@ use Orkestra\Services\Http\Entities\ParamDefinition;
 
 use Laminas\Diactoros\ServerRequestFactory;
 use Orkestra\Services\Hooks\Interfaces\ListenerInterface;
+use WP_HTTP_Response;
 use WP_REST_Request;
 
 class ApiDispatch implements ListenerInterface
@@ -80,7 +81,13 @@ class ApiDispatch implements ListenerInterface
 
 					$response = $router->dispatch($request);
 
-					return json_decode($response->getBody());
+					return rest_ensure_response(
+						new WP_HTTP_Response(
+							json_decode($response->getBody()),
+							$response->getStatusCode(),
+							$response->getHeaders()
+						)
+					);
 				},
 				/** Allow all request so we can handle on our middleware */
 				'permission_callback' => fn () => true,
