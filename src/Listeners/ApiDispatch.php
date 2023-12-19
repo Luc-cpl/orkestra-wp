@@ -81,11 +81,16 @@ class ApiDispatch implements ListenerInterface
 
 					$response = $router->dispatch($request);
 
+					$headers = array_map(
+						fn ($header) => is_array($header) ? $header[0] : $header,
+						$response->getHeaders()
+					);
+
 					return rest_ensure_response(
 						new WP_HTTP_Response(
 							json_decode($response->getBody()),
 							$response->getStatusCode(),
-							$response->getHeaders()
+							$headers
 						)
 					);
 				},
