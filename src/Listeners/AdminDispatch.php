@@ -87,8 +87,8 @@ class AdminDispatch implements ListenerInterface
 		/** @var float|int|null $position */
 		$position = $definition->meta('position');
 		add_menu_page(
-			$definition->name(),
-			$definition->name(),
+			$definition->title(),
+			$definition->title(),
 			$capability,
 			$this->app->slug() . $path,
 			$this->getRenderedView(...),
@@ -111,8 +111,8 @@ class AdminDispatch implements ListenerInterface
 		$position = $definition->meta('position');
 		add_submenu_page(
 			$this->app->slug() . $parent,
-			$definition->name(),
-			$definition->name(),
+			$definition->title(),
+			$definition->title(),
 			$capability,
 			$this->app->slug() . $path,
 			$this->getRenderedView(...),
