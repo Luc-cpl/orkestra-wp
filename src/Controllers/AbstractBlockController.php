@@ -7,9 +7,9 @@ use DI\Attribute\Inject;
 use OrkestraWP\Proxies\Views\BlockViewProxy;
 
 /**
- * BaseBlockController
+ * AbstractBlockController
  */
-abstract class BaseBlockController
+abstract class AbstractBlockController
 {
 	#[Inject]
 	protected App $app;
