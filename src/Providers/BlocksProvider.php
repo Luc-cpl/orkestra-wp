@@ -21,6 +21,10 @@ class BlocksProvider implements ProviderInterface
 				return true;
 			},
 		]);
+
+		$app->config()->set('definition', [
+			'blocks' => [false, 'The blocks to register with the app'],
+		]);
 	}
 
 	public function boot(App $app): void
