@@ -1,6 +1,6 @@
 {
-    "name": "webei/orkestra-wp",
-    "description": "Wordpress proxies to Webei/Orkestra",
+    "name": "orkestra/wordpress",
+    "description": "Wordpress proxies to Orkestra framework",
     "type": "project",
     "license": "MIT",
     "version": "0.0.2",
@@ -33,7 +33,7 @@
         }
     ],
     "require": {
-        "webei/orkestra": "*"
+        "orkestra/framework": "*"
     },
     "require-dev": {
         "giacocorsiglia/wordpress-stubs": "^5.1",
