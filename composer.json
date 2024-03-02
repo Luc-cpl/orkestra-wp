@@ -1,9 +1,9 @@
 {
-    "name": "orkestra/wordpress",
+    "name": "luccpl/orkestra-wp",
     "description": "Wordpress proxies to Orkestra framework",
     "type": "project",
     "license": "MIT",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "keywords": [
         "wordpress",
         "orkestra"
@@ -14,7 +14,7 @@
     "minimum-stability": "dev",
     "authors": [
         {
-            "name": "Luc-cpl",
+            "name": "Lucas Carvalho",
             "email": "lucas.carvalhopl@outlook.com"
         }
     ],
@@ -33,7 +33,7 @@
         }
     ],
     "require": {
-        "orkestra/framework": "*"
+        "luccpl/orkestra": "*"
     },
     "require-dev": {
         "giacocorsiglia/wordpress-stubs": "^5.1",
