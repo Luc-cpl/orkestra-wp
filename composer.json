@@ -40,5 +40,10 @@
         "szepeviktor/phpstan-wordpress": "dev-master",
         "phpstan/phpstan": "^1.10",
         "phpstan/extension-installer": "^1.3"
+    },
+    "config": {
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
     }
 }
