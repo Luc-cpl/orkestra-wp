@@ -20,10 +20,19 @@ class BlocksProvider implements ProviderInterface
 
 				return true;
 			},
+			'blocks_root' => function ($value) {
+				$value = $value ?? '';
+				if (!is_string($value)) {
+					return 'The blocks root must be a string';
+				}
+
+				return true;
+			},
 		]);
 
 		$app->config()->set('definition', [
 			'blocks' => [false, 'The blocks to register with the app'],
+			'blocks_root' => [false, 'The blocks root directory'],
 		]);
 	}
 
@@ -34,8 +43,7 @@ class BlocksProvider implements ProviderInterface
 				/** @var mixed[] */
 				$blocks = $app->config()->get('blocks', []);
 				/** @var string */
-				$root = $app->config()->get('public_path');
-				$root = rtrim($root, '/') . '/resources/';
+				$root = $app->config()->get('blocks_root', $app->config()->get('root'));
 				$this->registerBlocks($app, $root, $blocks);
 			});
 		});
