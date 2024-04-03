@@ -18,6 +18,6 @@ class CommandsProvider extends CoreProvider
 	public function register(App $app): void
 	{
 		parent::register($app);
-		$app->bind(CommandsHandler::class, CoreCommandsHandler::class);
+		$app->bind(CoreCommandsHandler::class, CommandsHandler::class);
 	}
 }
