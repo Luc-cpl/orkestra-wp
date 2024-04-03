@@ -90,6 +90,8 @@ abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 		$scriptIndex = 0;
 		$styleIndex  = 0;
 
+		$inline = [];
+
 		foreach ($data as $tag) {
 			// Skip if not a script or link tag
 			if (!in_array($tag->tag, ['script', 'link'])) {
@@ -110,19 +112,20 @@ abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 			}
 
 			if (!empty($content) && $script) {
-				wp_add_inline_script(
-					"$slug-$scriptIndex",
-					$content,
-					$scriptIndex === 0 ? 'before' : 'after'
-				);
+				$inline[] = [
+					'type'    => 'script',
+					'index'   => $scriptIndex,
+					'content' => $content,
+				];
 				continue;
 			}
 
 			if (!empty($content)) {
-				wp_add_inline_style(
-					"$slug-$styleIndex",
-					$content,
-				);
+				$inline[] = [
+					'type'    => 'style',
+					'index'   => $styleIndex,
+					'content' => $content,
+				];
 				continue;
 			}
 
@@ -161,6 +164,45 @@ abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 				$version,
 			);
 			$styleIndex++;
+		}
+
+		foreach ($inline as $item) {
+			if ($item['type'] === 'script') {
+				if ($scriptIndex === 0) {
+					wp_register_script("$slug-$scriptIndex", false);
+					wp_enqueue_script("$slug-$scriptIndex");
+					$scriptIndex++;
+				}
+
+				$index = $item['index'];
+				$position = 'before';
+
+				if ($index >= $scriptIndex) {
+					$index = $scriptIndex - 1;
+					$position = 'after';
+				}
+
+				wp_add_inline_script(
+					"$slug-$index",
+					$item['content'],
+					$position,
+				);
+			} else {
+				$index = $item['index'];
+
+				if ($styleIndex === 0) {
+					wp_register_style("$slug-$styleIndex", false);
+					wp_enqueue_style("$slug-$styleIndex");
+					$styleIndex++;
+				} elseif ($index > 0) {
+					$index--;
+				}
+
+				wp_add_inline_style(
+					"$slug-$index",
+					$item['content'],
+				);
+			}
 		}
 	}
 
