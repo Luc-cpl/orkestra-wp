@@ -4,6 +4,7 @@ namespace OrkestraWP\Proxies\Views;
 
 use Orkestra\App;
 use Orkestra\Services\Hooks\Interfaces\HooksInterface;
+use Orkestra\Services\Http\Facades\RouteDefinitionFacade;
 use Twig\Environment;
 
 class HttpViewProxy extends AbstractViewProxy
@@ -18,16 +19,13 @@ class HttpViewProxy extends AbstractViewProxy
 
 	public function render($name, array $context = []): string
 	{
-		$route = $this->route;
+		$route = $context['route'] ?? false;
 
-		if (!$route) {
+		if (!$route instanceof RouteDefinitionFacade) {
 			return $this->defaultView->render($name, $context);
 		}
 
-		$group = $route->getParentGroup();
-
-		$type = $route->getDefinition()->type();
-		$type = empty($type) && $group ? $group->getDefinition()->type() : $type;
+		$type = $route->type();
 
 		$content = $this->wpRender($type, $name, $context);
 
