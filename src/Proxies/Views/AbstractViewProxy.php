@@ -5,7 +5,6 @@ namespace OrkestraWP\Proxies\Views;
 use Orkestra\App;
 use Orkestra\Services\Hooks\Interfaces\HooksInterface;
 use Orkestra\Services\View\Interfaces\ViewInterface;
-use Orkestra\Services\Http\Interfaces\RouteInterface;
 use Orkestra\Services\View\HtmlTag;
 use Orkestra\Services\View\Twig\OrkestraExtension;
 use Orkestra\Services\View\View;
