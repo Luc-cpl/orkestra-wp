@@ -13,6 +13,6 @@ class HooksProvider extends CoreHooksProvider
 	public function register(App $app): void
 	{
 		parent::register($app);
-		$app->singleton(HooksInterface::class, HooksProxy::class);
+		$app->bind(HooksInterface::class, HooksProxy::class);
 	}
 }

@@ -12,27 +12,13 @@ class BlocksProvider implements ProviderInterface
 	public function register(App $app): void
 	{
 		$app->config()->set('validation', [
-			'blocks' => function ($value) {
-				$value = $value ?? [];
-				if (!is_array($value)) {
-					return 'The blocks config must be an array';
-				}
-
-				return true;
-			},
-			'blocks_root' => function ($value) {
-				$value = $value ?? '';
-				if (!is_string($value)) {
-					return 'The blocks root must be a string';
-				}
-
-				return true;
-			},
+			'blocks' => fn ($value) => is_array($value) ? true : 'The blocks config must be an array',
+			'blocks_root' => fn ($value) => is_string($value) ? true : 'The blocks root must be a string',
 		]);
 
 		$app->config()->set('definition', [
-			'blocks' => [false, 'The blocks to register with the app'],
-			'blocks_root' => [false, 'The blocks root directory'],
+			'blocks' => ['The blocks to register with the app', []],
+			'blocks_root' => ['The blocks root directory', ''],
 		]);
 	}
 
