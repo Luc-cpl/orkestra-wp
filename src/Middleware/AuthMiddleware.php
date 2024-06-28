@@ -2,6 +2,7 @@
 
 namespace OrkestraWP\Middleware;
 
+use Orkestra\Services\Http\Middleware\AbstractMiddleware;
 use OrkestraWP\Repositories\Auth;
 use League\Route\Http\Exception\ForbiddenException;
 use Psr\Http\Message\ResponseInterface;
@@ -16,14 +17,14 @@ use Psr\Http\Server\RequestHandlerInterface;
  * by acting on the request, generating the response, or forwarding the
  * request to a subsequent middleware and possibly acting on its response.
  */
-class AuthMiddleware implements MiddlewareInterface
+class AuthMiddleware extends AbstractMiddleware implements MiddlewareInterface
 {
 	/**
 	 * @param string|string[] $role
 	 */
 	public function __construct(
 		protected Auth $auth,
-		protected string|array $role = 'logged_in'
+		protected string|array|null $role = null
 	) {
 	}
 
@@ -38,7 +39,7 @@ class AuthMiddleware implements MiddlewareInterface
 	{
 		$auth = $this->auth;
 		$user = $auth->user;
-		$roles = is_string($this->role) ? [$this->role] : $this->role;
+		$roles = is_string($this->role) ? [$this->role] : $this->role ?? [];
 
 		if (!$user && in_array('guest', $roles, true)) {
 			return $handler->handle($request);
@@ -49,6 +50,12 @@ class AuthMiddleware implements MiddlewareInterface
 		}
 
 		if ($this->role === 'logged_in') {
+			return $handler->handle($request);
+		}
+
+		/** @var string */
+		$capability = $this->route->getDefinition()->meta('capability', '');
+		if ($user->has_cap($capability)) {
 			return $handler->handle($request);
 		}
 
