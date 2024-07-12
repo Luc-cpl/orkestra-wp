@@ -16,10 +16,28 @@ class HttpViewProxy extends AbstractViewProxy
 
 		$type = $route->type();
 
-		$content = $this->wpRender($type, $name, $context);
+		if (!$this->isWPType($type)) {
+			// As this is not a WP call, we render the template as normal then exit.
+			$this->app->hookRegister('http.router.response.after', fn () => exit);
+			return $this->defaultView->render($name, $context);
+		}
+
+		$content = $this->wpRender($name, $context);
 
 		$this->app->hookRegister('view.content', fn () => $content);
 
 		return $this->isWPType($type) ? '' : $content;
+	}
+
+	protected function isWPType(string $type): bool
+	{
+		/** @var string[] */
+		$wpTypes = $this->app->hookQuery('view.wp_types', [
+			'api',
+			'admin',
+			'block',
+		]);
+
+		return in_array($type, $wpTypes, true);
 	}
 }

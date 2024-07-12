@@ -30,14 +30,8 @@ abstract class AbstractViewProxy implements ViewInterface
 	/**
 	 * @param mixed[] $context
 	 */
-	protected function wpRender(string $type, string $name, array $context = []): string
+	protected function wpRender(string $name, array $context = []): string
 	{
-		if (!$this->isWPType($type)) {
-			// As this is not a WP call, we render the template as normal then exit.
-			$this->app->hookRegister('http.router.response.after', fn () => exit);
-			return $this->defaultView->render($name, $context);
-		}
-
 		$name       = explode('.', $name, 1)[0] . '.twig';
 		$content    = $this->twig->render($name, $context);
 		$headData   = $this->twig->getExtension(OrkestraExtension::class)->getHead();
@@ -54,18 +48,6 @@ abstract class AbstractViewProxy implements ViewInterface
 		return $content;
 	}
 
-	protected function isWPType(string $type): bool
-	{
-		/** @var string[] */
-		$wpTypes = $this->app->hookQuery('view.wp_types', [
-			'api',
-			'admin',
-			'block',
-		]);
-
-		return in_array($type, $wpTypes, true);
-	}
-
 	/**
 	 * Enqueue assets from the head and footer
 	 *
@@ -74,12 +56,8 @@ abstract class AbstractViewProxy implements ViewInterface
 	 */
 	private function enqueueAssets(array $data, bool $footer = false): void
 	{
-		$slug = $this->app->slug();
-
-		$scriptIndex = 0;
-		$styleIndex  = 0;
-
-		$inline = [];
+		$currentScriptHandle = null;
+		$currentStyleHandle = null;
 
 		foreach ($data as $tag) {
 			// Skip if not a script or link tag
@@ -87,12 +65,14 @@ abstract class AbstractViewProxy implements ViewInterface
 				continue;
 			}
 
-			$script  = $tag->tag === 'script';
 			/** @var string */
 			$src     = $tag->getAttribute('src') ?? $tag->getAttribute('href');
+			$script  = $tag->tag === 'script';
 			$content = $tag->content;
+
 			/** @var string */
 			$version = $tag->getAttribute('version');
+
 			/** @var string[] */
 			$dependencies = $tag->getAttribute('dependencies') ?? [];
 
@@ -100,31 +80,40 @@ abstract class AbstractViewProxy implements ViewInterface
 				continue;
 			}
 
+			// Inline script
 			if (!empty($content) && $script) {
-				$inline[] = [
-					'type'    => 'script',
-					'index'   => $scriptIndex,
-					'content' => $content,
-				];
+				// Register a initial script if needed
+				if (!$currentScriptHandle) {
+					$currentScriptHandle = hash('xxh32', $content);
+					wp_register_script($currentScriptHandle, false, $dependencies, $version, $footer);
+					wp_enqueue_script($currentScriptHandle);
+				}
+
+				wp_add_inline_script($currentScriptHandle, $content, 'after');
 				continue;
 			}
 
+			// Inline style
 			if (!empty($content)) {
-				$inline[] = [
-					'type'    => 'style',
-					'index'   => $styleIndex,
-					'content' => $content,
-				];
+				// Register a initial script if needed
+				if (!$currentStyleHandle) {
+					$currentStyleHandle = hash('xxh32', $content);
+					wp_register_style($currentStyleHandle, false, $dependencies, $version);
+					wp_enqueue_style($currentStyleHandle);
+				}
+
+				wp_add_inline_style($currentStyleHandle, $content);
 				continue;
 			}
+
+			$handle = hash('xxh32', $src);
 
 			if ($script) {
-				$handle = "$slug-$scriptIndex";
-				$dependency = $slug . '-' . ($scriptIndex - 1);
+				$dependencies = $currentScriptHandle ? [...$dependencies, $currentScriptHandle] : $dependencies;
 				wp_enqueue_script(
 					$handle,
 					$src,
-					$scriptIndex === 0 ? $dependencies : [...$dependencies, $dependency],
+					$dependencies,
 					$version,
 					$footer
 				);
@@ -142,56 +131,18 @@ abstract class AbstractViewProxy implements ViewInterface
 					$this->extraAttributes[$handle] = $attributes;
 				}
 
-				$scriptIndex++;
+				$currentScriptHandle = $handle;
 				continue;
 			}
-			$dependency = $slug . '-' . ($styleIndex - 1);
+
+			$dependencies = $currentStyleHandle ? [...$dependencies, $currentStyleHandle] : $dependencies;
 			wp_enqueue_style(
-				"$slug-$styleIndex",
+				$handle,
 				$src,
-				$styleIndex === 0 ? $dependencies : [...$dependencies, $dependency],
+				$dependencies,
 				$version,
 			);
-			$styleIndex++;
-		}
-
-		foreach ($inline as $item) {
-			if ($item['type'] === 'script') {
-				if ($scriptIndex === 0) {
-					wp_register_script("$slug-$scriptIndex", false);
-					wp_enqueue_script("$slug-$scriptIndex");
-					$scriptIndex++;
-				}
-
-				$index = $item['index'];
-				$position = 'before';
-
-				if ($index >= $scriptIndex) {
-					$index = $scriptIndex - 1;
-					$position = 'after';
-				}
-
-				wp_add_inline_script(
-					"$slug-$index",
-					$item['content'],
-					$position,
-				);
-			} else {
-				$index = $item['index'];
-
-				if ($styleIndex === 0) {
-					wp_register_style("$slug-$styleIndex", false);
-					wp_enqueue_style("$slug-$styleIndex");
-					$styleIndex++;
-				} elseif ($index > 0) {
-					$index--;
-				}
-
-				wp_add_inline_style(
-					"$slug-$index",
-					$item['content'],
-				);
-			}
+			$currentStyleHandle = $handle;
 		}
 	}
 
