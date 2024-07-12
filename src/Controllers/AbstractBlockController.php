@@ -4,7 +4,7 @@ namespace OrkestraWP\Controllers;
 
 use Orkestra\App;
 use DI\Attribute\Inject;
-use OrkestraWP\Proxies\Views\BlockViewProxy;
+use OrkestraWP\Proxies\Views\WPViewProxy;
 
 /**
  * AbstractBlockController
@@ -15,7 +15,7 @@ abstract class AbstractBlockController
 	protected App $app;
 
 	#[Inject]
-	protected BlockViewProxy $view;
+	protected WPViewProxy $view;
 
 	/**
 	 * Render a view

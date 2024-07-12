@@ -7,13 +7,10 @@ use Orkestra\Services\Hooks\Interfaces\HooksInterface;
 use Orkestra\Services\View\Interfaces\ViewInterface;
 use Orkestra\Services\View\HtmlTag;
 use Orkestra\Services\View\Twig\OrkestraExtension;
-use Orkestra\Services\View\View;
 use Twig\Environment;
 
 abstract class AbstractViewProxy implements ViewInterface
 {
-	protected View $defaultView;
-
 	/**
 	 * @var array<string, array<string, bool|string|int|float|mixed[]>>
 	 */
@@ -23,8 +20,9 @@ abstract class AbstractViewProxy implements ViewInterface
 		protected App            $app,
 		protected HooksInterface $hooks,
 		protected Environment    $twig,
+		protected ViewInterface  $defaultView,
 	) {
-		$this->defaultView = $app->get(View::class, ['twig' => $twig]);
+		//
 	}
 
 	abstract public function render(string $name, array $context = []): string;
