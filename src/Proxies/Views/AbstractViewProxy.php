@@ -142,7 +142,7 @@ abstract class AbstractViewProxy implements ViewInterface
 				);
 
 				if (!empty($attributes)) {
-					$this->extraAttributes[$handle] = $attributes;
+					$this->extraAttributes[$hash] = $attributes;
 				}
 
 				$currentScriptHandle = $hash;
