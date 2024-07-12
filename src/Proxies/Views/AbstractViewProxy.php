@@ -16,6 +16,14 @@ abstract class AbstractViewProxy implements ViewInterface
 	 */
 	private array $extraAttributes = [];
 
+	/**
+	 * Keep a central registry of enqueued assets to avoid duplicates
+	 * in inline scripts and styles.
+	 *
+	 * @var array<string, bool>
+	 */
+	private static array $enqueuedAssets = [];
+
 	public function __construct(
 		protected App            $app,
 		protected HooksInterface $hooks,
@@ -80,11 +88,19 @@ abstract class AbstractViewProxy implements ViewInterface
 				continue;
 			}
 
+			$hash = !empty($content) ? hash('xxh32', $content) : hash('xxh32', $src);
+
+			if (isset(static::$enqueuedAssets[$hash])) {
+				continue;
+			}
+
+			static::$enqueuedAssets[$hash] = true;
+
 			// Inline script
 			if (!empty($content) && $script) {
 				// Register a initial script if needed
 				if (!$currentScriptHandle) {
-					$currentScriptHandle = hash('xxh32', $content);
+					$currentScriptHandle = $hash;
 					wp_register_script($currentScriptHandle, false, $dependencies, $version, $footer);
 					wp_enqueue_script($currentScriptHandle);
 				}
@@ -97,7 +113,7 @@ abstract class AbstractViewProxy implements ViewInterface
 			if (!empty($content)) {
 				// Register a initial script if needed
 				if (!$currentStyleHandle) {
-					$currentStyleHandle = hash('xxh32', $content);
+					$currentStyleHandle = $hash;
 					wp_register_style($currentStyleHandle, false, $dependencies, $version);
 					wp_enqueue_style($currentStyleHandle);
 				}
@@ -106,12 +122,10 @@ abstract class AbstractViewProxy implements ViewInterface
 				continue;
 			}
 
-			$handle = hash('xxh32', $src);
-
 			if ($script) {
 				$dependencies = $currentScriptHandle ? [...$dependencies, $currentScriptHandle] : $dependencies;
 				wp_enqueue_script(
-					$handle,
+					$hash,
 					$src,
 					$dependencies,
 					$version,
@@ -131,18 +145,18 @@ abstract class AbstractViewProxy implements ViewInterface
 					$this->extraAttributes[$handle] = $attributes;
 				}
 
-				$currentScriptHandle = $handle;
+				$currentScriptHandle = $hash;
 				continue;
 			}
 
 			$dependencies = $currentStyleHandle ? [...$dependencies, $currentStyleHandle] : $dependencies;
 			wp_enqueue_style(
-				$handle,
+				$hash,
 				$src,
 				$dependencies,
 				$version,
 			);
-			$currentStyleHandle = $handle;
+			$currentStyleHandle = $hash;
 		}
 	}
 
