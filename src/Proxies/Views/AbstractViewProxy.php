@@ -132,6 +132,9 @@ abstract class AbstractViewProxy implements ViewInterface
 					$footer
 				);
 
+				$slug = $tag->getAttribute('textdomain') ?? $this->app->slug();
+				wp_set_script_translations($hash, $slug, $tag->getAttribute('path') ?? '');
+
 				$attributes = $tag->attributes;
 
 				unset(
