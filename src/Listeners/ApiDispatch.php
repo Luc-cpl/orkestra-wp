@@ -38,12 +38,11 @@ class ApiDispatch implements ListenerInterface
 
 		foreach ($routes as $route) {
 			$originalGroupName = $route->getParentGroup()?->getPrefix() ?? '';
-			// if exist, remove the /api/ from the start of group name
-			$groupName = substr($originalGroupName, 0, 5) === '/api/'
-				? substr($originalGroupName, 5)
-				: $originalGroupName;
-			$groupName = '/' . trim($groupName, '/');
-			$namespace = $this->app->slug() . $groupName;
+			$namespace = $originalGroupName;
+
+			if (substr($originalGroupName, 0, 5) === '/api/') {
+				$namespace = '/' . $this->app->slug() . substr($originalGroupName, 4);
+			}
 
 			$path = substr($route->getPath(), strlen($originalGroupName));
 			$path = $this->getWPPath($path);
@@ -63,7 +62,7 @@ class ApiDispatch implements ListenerInterface
 				'callback'            => function (WP_REST_Request $wpRequest) use ($router, $route, $namespace) {
 					$server = $_SERVER;
 
-					$prefix = '/' . rest_get_url_prefix() . '/' . $namespace;
+					$prefix = '/' . rest_get_url_prefix() . $namespace;
 					$uri = substr($server['REQUEST_URI'], strlen($prefix));
 					$uri = $route->getParentGroup()?->getPrefix() . $uri;
 
