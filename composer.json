@@ -26,16 +26,15 @@
     "repositories": [
         {
             "type": "path",
-            "url": "../orkestra",
-            "options": {
-                "symlink": true
-            }
+            "url": "../sonata"
         }
     ],
     "require": {
-        "luccpl/orkestra": "*"
+        "luccpl/orkestra": "dev-release/1.1.0",
+        "luccpl/sonata": "*"
     },
     "require-dev": {
+        "luccpl/orkestra": "*",
         "giacocorsiglia/wordpress-stubs": "^5.1",
         "szepeviktor/phpstan-wordpress": "dev-master",
         "phpstan/phpstan": "^1.10",

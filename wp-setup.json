@@ -1,0 +1,11 @@
+{
+	"include": false,
+	"multisite": false,
+	"host": "orkestra-wp.localhost",
+	"plugins": [
+		"https://downloads.wordpress.org/plugin/query-monitor.zip:query-monitor",
+		".:orkestra-wp"
+	],
+	"themes": [],
+	"volumes": []
+}

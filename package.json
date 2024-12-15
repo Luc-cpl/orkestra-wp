@@ -1,0 +1,30 @@
+{
+  "name": "orkestra-wp",
+  "description": "",
+  "scripts": {
+		"wp-setup": "wp-setup",
+		"env:start": "wp-setup start",
+		"env:start:xdebug": "wp-setup start --xdebug",
+		"env:stop": "wp-setup stop",
+		"env:stop:xdebug": "wp-setup stop --xdebug",
+		"env:destroy": "wp-setup destroy",
+		"env:run": "wp-setup run",
+		"env:wp": "wp-setup wp",
+		"env:help": "wp-setup help",
+		"env:composer": "wp-setup run wp-cli --workdir . composer",
+		"env:pest": "wp-setup run wp-test-cli --workdir . global-pest",
+		"env:pest:coverage": "wp-setup run -w . wp-test-cli global-pest --coverage-html ./tests/coverage"
+	},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Luc-cpl/orkestra-wp.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/Luc-cpl/orkestra-wp/issues"
+  },
+  "homepage": "https://github.com/Luc-cpl/orkestra-wp#readme",
+  "devDependencies": {
+    "@luc-cpl/wp-setup": "^1.1.4"
+  }
+}
