@@ -48,7 +48,7 @@ class ApiDispatch implements ListenerInterface
 			$path = $this->getWPPath($path);
 
 			$wpRoutes[$path] = $wpRoutes[$path] ?? [
-				'namespace'   => $namespace,
+				'namespace'   => trim($namespace, '/'),
 				'accept_json' => true,
 				'args'        => [],
 			];
