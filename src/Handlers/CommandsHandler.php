@@ -34,9 +34,12 @@ class CommandsHandler extends CoreCommandsHandler implements HandlerInterface
      *
      * [--plugin=<name>]
      * : The plugin to run the command. By default, the command will run in Maestro application root directory.
-     * 
+     *
      * [--theme=<name>]
      * : The theme to run the command. By default, the command will run in Maestro application root directory.
+     *
+     * [--<field>=<value>]
+     * : Any other parameter that will be passed to the command.
      */
     protected function wpCLI(array $args, array $flags)
     {
