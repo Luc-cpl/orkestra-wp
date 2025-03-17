@@ -28,6 +28,7 @@ class HttpHandler extends CoreHttpHandler implements HandlerInterface
 				 */
 				try {
 					parent::handle();
+					exit; // Exit to prevent WordPress from handling the request
 				} catch (NotFoundException|MethodNotAllowedException) {
 				}
 			});
