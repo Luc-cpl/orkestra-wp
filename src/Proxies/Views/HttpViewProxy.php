@@ -2,37 +2,42 @@
 
 namespace OrkestraWP\Proxies\Views;
 
-use Orkestra\App;
-use Orkestra\Services\Hooks\Interfaces\HooksInterface;
-use Twig\Environment;
+use Orkestra\Services\Http\Facades\RouteDefinitionFacade;
 
 class HttpViewProxy extends AbstractViewProxy
 {
-	public function __construct(
-		protected App            $app,
-		protected HooksInterface $hooks,
-		protected Environment    $twig,
-	) {
-		parent::__construct($app, $hooks, $twig);
-	}
-
 	public function render($name, array $context = []): string
 	{
-		$route = $this->route;
+		$route = $context['route'] ?? false;
 
-		if (!$route) {
+		if (!$route instanceof RouteDefinitionFacade) {
 			return $this->defaultView->render($name, $context);
 		}
 
-		$group = $route->getParentGroup();
+		$type = $route->type();
 
-		$type = $route->getDefinition()->type();
-		$type = empty($type) && $group ? $group->getDefinition()->type() : $type;
+		if (!$this->isWPType($type)) {
+			// As this is not a WP call, we render the template as normal then exit.
+			$this->app->hookRegister('http.router.response.after', fn () => exit);
+			return $this->defaultView->render($name, $context);
+		}
 
-		$content = $this->wpRender($type, $name, $context);
+		$content = $this->wpRender($name, $context);
 
 		$this->app->hookRegister('view.content', fn () => $content);
 
 		return $this->isWPType($type) ? '' : $content;
+	}
+
+	protected function isWPType(string $type): bool
+	{
+		/** @var string[] */
+		$wpTypes = $this->app->hookQuery('view.wp_types', [
+			'api',
+			'admin',
+			'block',
+		]);
+
+		return in_array($type, $wpTypes, true);
 	}
 }

@@ -5,35 +5,32 @@ namespace OrkestraWP\Proxies\Views;
 use Orkestra\App;
 use Orkestra\Services\Hooks\Interfaces\HooksInterface;
 use Orkestra\Services\View\Interfaces\ViewInterface;
-use Orkestra\Services\Http\Interfaces\RouteAwareInterface;
-use Orkestra\Services\Http\Interfaces\RouteInterface;
 use Orkestra\Services\View\HtmlTag;
 use Orkestra\Services\View\Twig\OrkestraExtension;
-use Orkestra\Services\View\View;
 use Twig\Environment;
 
-abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
+abstract class AbstractViewProxy implements ViewInterface
 {
-	protected View $defaultView;
-	protected ?RouteInterface $route = null;
-
 	/**
 	 * @var array<string, array<string, bool|string|int|float|mixed[]>>
 	 */
 	private array $extraAttributes = [];
 
+	/**
+	 * Keep a central registry of enqueued assets to avoid duplicates
+	 * in inline scripts and styles.
+	 *
+	 * @var array<string, bool>
+	 */
+	private static array $enqueuedAssets = [];
+
 	public function __construct(
 		protected App            $app,
 		protected HooksInterface $hooks,
 		protected Environment    $twig,
+		protected ViewInterface  $defaultView,
 	) {
-		$this->defaultView = $app->get(View::class, ['twig' => $twig]);
-	}
-
-	public function setRoute(RouteInterface $route): self
-	{
-		$this->route = $route;
-		return $this;
+		//
 	}
 
 	abstract public function render(string $name, array $context = []): string;
@@ -41,14 +38,8 @@ abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 	/**
 	 * @param mixed[] $context
 	 */
-	protected function wpRender(string $type, string $name, array $context = []): string
+	protected function wpRender(string $name, array $context = []): string
 	{
-		if (!$this->isWPType($type)) {
-			// As this is not a WP call, we render the template as normal then exit.
-			$this->app->hookRegister('http.router.response.after', fn () => exit);
-			return $this->defaultView->render($name, $context);
-		}
-
 		$name       = explode('.', $name, 1)[0] . '.twig';
 		$content    = $this->twig->render($name, $context);
 		$headData   = $this->twig->getExtension(OrkestraExtension::class)->getHead();
@@ -65,18 +56,6 @@ abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 		return $content;
 	}
 
-	protected function isWPType(string $type): bool
-	{
-		/** @var string[] */
-		$wpTypes = $this->app->hookQuery('view.wp_types', [
-			'api',
-			'admin',
-			'block',
-		]);
-
-		return in_array($type, $wpTypes, true);
-	}
-
 	/**
 	 * Enqueue assets from the head and footer
 	 *
@@ -85,10 +64,8 @@ abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 	 */
 	private function enqueueAssets(array $data, bool $footer = false): void
 	{
-		$slug = $this->app->slug();
-
-		$scriptIndex = 0;
-		$styleIndex  = 0;
+		$currentScriptHandle = null;
+		$currentStyleHandle = null;
 
 		foreach ($data as $tag) {
 			// Skip if not a script or link tag
@@ -96,12 +73,14 @@ abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 				continue;
 			}
 
-			$script  = $tag->tag === 'script';
 			/** @var string */
 			$src     = $tag->getAttribute('src') ?? $tag->getAttribute('href');
+			$script  = $tag->tag === 'script';
 			$content = $tag->content;
+
 			/** @var string */
 			$version = $tag->getAttribute('version');
+
 			/** @var string[] */
 			$dependencies = $tag->getAttribute('dependencies') ?? [];
 
@@ -109,33 +88,52 @@ abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 				continue;
 			}
 
-			if (!empty($content) && $script) {
-				wp_add_inline_script(
-					"$slug-$scriptIndex",
-					$content,
-					$scriptIndex === 0 ? 'before' : 'after'
-				);
+			$hash = !empty($content) ? hash('xxh32', $content) : hash('xxh32', $src);
+
+			if (isset(static::$enqueuedAssets[$hash])) {
 				continue;
 			}
 
+			static::$enqueuedAssets[$hash] = true;
+
+			// Inline script
+			if (!empty($content) && $script) {
+				// Register a initial script if needed
+				if (!$currentScriptHandle) {
+					$currentScriptHandle = $hash;
+					wp_register_script($currentScriptHandle, false, $dependencies, $version, $footer);
+					wp_enqueue_script($currentScriptHandle);
+				}
+
+				wp_add_inline_script($currentScriptHandle, $content, 'after');
+				continue;
+			}
+
+			// Inline style
 			if (!empty($content)) {
-				wp_add_inline_style(
-					"$slug-$styleIndex",
-					$content,
-				);
+				// Register a initial script if needed
+				if (!$currentStyleHandle) {
+					$currentStyleHandle = $hash;
+					wp_register_style($currentStyleHandle, false, $dependencies, $version);
+					wp_enqueue_style($currentStyleHandle);
+				}
+
+				wp_add_inline_style($currentStyleHandle, $content);
 				continue;
 			}
 
 			if ($script) {
-				$handle = "$slug-$scriptIndex";
-				$dependency = $slug . '-' . ($scriptIndex - 1);
+				$dependencies = $currentScriptHandle ? [...$dependencies, $currentScriptHandle] : $dependencies;
 				wp_enqueue_script(
-					$handle,
+					$hash,
 					$src,
-					$scriptIndex === 0 ? $dependencies : [...$dependencies, $dependency],
+					$dependencies,
 					$version,
 					$footer
 				);
+
+				$slug = $tag->getAttribute('textdomain') ?? $this->app->slug();
+				wp_set_script_translations($hash, $slug, $tag->getAttribute('path') ?? '');
 
 				$attributes = $tag->attributes;
 
@@ -147,20 +145,21 @@ abstract class AbstractViewProxy implements ViewInterface, RouteAwareInterface
 				);
 
 				if (!empty($attributes)) {
-					$this->extraAttributes[$handle] = $attributes;
+					$this->extraAttributes[$hash] = $attributes;
 				}
 
-				$scriptIndex++;
+				$currentScriptHandle = $hash;
 				continue;
 			}
-			$dependency = $slug . '-' . ($styleIndex - 1);
+
+			$dependencies = $currentStyleHandle ? [...$dependencies, $currentStyleHandle] : $dependencies;
 			wp_enqueue_style(
-				"$slug-$styleIndex",
+				$hash,
 				$src,
-				$styleIndex === 0 ? $dependencies : [...$dependencies, $dependency],
+				$dependencies,
 				$version,
 			);
-			$styleIndex++;
+			$currentStyleHandle = $hash;
 		}
 	}
 

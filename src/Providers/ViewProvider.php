@@ -19,7 +19,11 @@ class ViewProvider extends CoreProvider
 	public function register(App $app): void
 	{
 		parent::register($app);
-		$app->bind(ViewInterface::class, View::class);
+		$app->decorate(ViewInterface::class, function (ViewInterface $defaultView, App $app) {
+			return $app->make(View::class, [
+				'defaultView' => $defaultView
+			]);
+		});
 	}
 
 	/**

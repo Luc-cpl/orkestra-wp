@@ -2,6 +2,7 @@
 
 namespace OrkestraWP\Handlers;
 
+use League\Route\Http\Exception\MethodNotAllowedException;
 use League\Route\Http\Exception\NotFoundException;
 use Orkestra\Handlers\HttpHandler as CoreHttpHandler;
 use Orkestra\Interfaces\HandlerInterface;
@@ -27,7 +28,8 @@ class HttpHandler extends CoreHttpHandler implements HandlerInterface
 				 */
 				try {
 					parent::handle();
-				} catch (NotFoundException) {
+					exit; // Exit to prevent WordPress from handling the request
+				} catch (NotFoundException|MethodNotAllowedException) {
 				}
 			});
 		});

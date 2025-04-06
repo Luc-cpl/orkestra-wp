@@ -12,18 +12,13 @@ class BlocksProvider implements ProviderInterface
 	public function register(App $app): void
 	{
 		$app->config()->set('validation', [
-			'blocks' => function ($value) {
-				$value = $value ?? [];
-				if (!is_array($value)) {
-					return 'The blocks config must be an array';
-				}
-
-				return true;
-			},
+			'blocks' => fn ($value) => is_array($value) ? true : 'The blocks config must be an array',
+			'blocks_root' => fn ($value) => is_string($value) ? true : 'The blocks root must be a string',
 		]);
 
 		$app->config()->set('definition', [
-			'blocks' => [false, 'The blocks to register with the app'],
+			'blocks' => ['The blocks to register with the app', []],
+			'blocks_root' => ['The blocks root directory', ''],
 		]);
 	}
 
@@ -34,8 +29,7 @@ class BlocksProvider implements ProviderInterface
 				/** @var mixed[] */
 				$blocks = $app->config()->get('blocks', []);
 				/** @var string */
-				$root = $app->config()->get('public_path');
-				$root = rtrim($root, '/') . '/resources/';
+				$root = $app->config()->get('blocks_root', $app->config()->get('root'));
 				$this->registerBlocks($app, $root, $blocks);
 			});
 		});
