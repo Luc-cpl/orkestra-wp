@@ -3,7 +3,7 @@
     "description": "Wordpress proxies to Orkestra framework",
     "type": "project",
     "license": "MIT",
-    "version": "0.0.3",
+    "version": "1.0.0",
     "keywords": [
         "wordpress",
         "orkestra"
